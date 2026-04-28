@@ -5,3 +5,6 @@ pandas
 numpy
 joblib
 python-multipart
+python-dotenv
+groq
+gdown
