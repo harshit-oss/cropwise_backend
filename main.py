@@ -81,7 +81,14 @@ if not os.path.exists(MODEL_PATH):
     
     print("✅ Model downloaded!")
 
-_prod_bundle    = joblib.load(MODEL_PATH)
+prod_model = None
+
+def load_prod_model():
+    global prod_model
+    if prod_model is None:
+        _prod_bundle = joblib.load(MODEL_PATH)
+        prod_model = _prod_bundle["model"]
+    return prod_model
 prod_model      = _prod_bundle["model"]
 prod_le_state   = _prod_bundle["le_state"]
 prod_le_dist    = _prod_bundle["le_district"]
