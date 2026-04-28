@@ -76,28 +76,42 @@ MODEL_PATH = "crop_production_model_retrained.pkl"
 if not os.path.exists(MODEL_PATH):
     print("Downloading production model...")
     
-    url = "https://drive.google.com/file/d/1RkUyH1h1UBeS91XRxqpbfYUbb8voTyZq/view?usp=sharing"
+    url = "https://drive.google.com/uc?id=1RkUyH1h1UBeS91XRxqpbfYUbb8voTyZq"
     gdown.download(url, MODEL_PATH, quiet=False)
     
     print("✅ Model downloaded!")
 
 prod_model = None
+prod_le_state = None
+prod_le_dist = None
+prod_le_season = None
+prod_le_crop = None
+PROD_STATES = []
+PROD_DISTRICTS = []
+PROD_SEASONS = []
+PROD_CROPS = []
 
 def load_prod_model():
-    global prod_model
+    global prod_model, prod_le_state, prod_le_dist
+    global prod_le_season, prod_le_crop
+    global PROD_STATES, PROD_DISTRICTS, PROD_SEASONS, PROD_CROPS
+
     if prod_model is None:
+        print("Loading production model...")
+
         _prod_bundle = joblib.load(MODEL_PATH)
-        prod_model = _prod_bundle["model"]
+
+        prod_model      = _prod_bundle["model"]
+        prod_le_state   = _prod_bundle["le_state"]
+        prod_le_dist    = _prod_bundle["le_district"]
+        prod_le_season  = _prod_bundle["le_season"]
+        prod_le_crop    = _prod_bundle["le_crop"]
+        PROD_STATES     = _prod_bundle["states"]
+        PROD_DISTRICTS  = _prod_bundle["districts"]
+        PROD_SEASONS    = _prod_bundle["seasons"]
+        PROD_CROPS      = _prod_bundle["crops"]
+
     return prod_model
-prod_model      = _prod_bundle["model"]
-prod_le_state   = _prod_bundle["le_state"]
-prod_le_dist    = _prod_bundle["le_district"]
-prod_le_season  = _prod_bundle["le_season"]
-prod_le_crop    = _prod_bundle["le_crop"]
-PROD_STATES     = _prod_bundle["states"]
-PROD_DISTRICTS  = _prod_bundle["districts"]
-PROD_SEASONS    = _prod_bundle["seasons"]
-PROD_CROPS      = _prod_bundle["crops"]
 
 print("✅ All 3 models loaded!")
 print(f"   Crop rec  : {len(crop_label_enc.classes_)} crops")
@@ -351,7 +365,8 @@ def predict_production(data: CropProductionInput):
             data.area, data.yield_per_hectare, year_group,
         ]])
 
-        pred = float(prod_model.predict(features)[0])
+        model = load_prod_model()
+        pred = float(model.predict(features)[0])
         return {
             "status":                    "success",
             "predicted_production_tons": round(pred, 2),
